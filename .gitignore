@@ -1,0 +1,8 @@
+.env__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+lead-research-agent-plan.md
