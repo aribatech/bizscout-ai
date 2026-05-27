@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Business Detail</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 max-w-2xl mx-auto">
+
+  <div id="back-link" class="text-sm mb-6">
+    <a href="/frontend/index.html" class="text-blue-500 underline">← Back</a>
+  </div>
+
+  <div id="business-info">
+    <p class="text-sm text-gray-400">Loading...</p>
+  </div>
+
+  <script>
+    var businessId = new URLSearchParams(window.location.search).get('id')
+    if (!businessId) window.location.href = '/frontend/index.html'
+
+    function scoreColor(score) {
+      if (score >= 70) return 'text-green-600'
+      if (score >= 50) return 'text-yellow-500'
+      return 'text-red-500'
+    }
+
+    function severityColor(s) {
+      if (s === 'high') return 'text-red-500'
+      if (s === 'medium') return 'text-yellow-500'
+      return 'text-gray-400'
+    }
+
+    async function loadBusiness() {
+      var res = await fetch('/businesses/' + businessId)
+      var b = await res.json()
+
+      document.getElementById('back-link').innerHTML =
+        '<a href="/frontend/campaign.html?id=' + b.campaign_id + '" class="text-blue-500 underline text-sm">← Back to Campaign</a>'
+
+      var problems = b.problems || []
+      var notes = b.notes || []
+      var values = b.expected_business_value || []
+      var contact = b.contact || {}
+      var html = ''
+
+      html += '<h1 class="text-xl font-bold mb-0.5">' + (b.name || 'Unknown Business') + '</h1>'
+      if (b.website) html += '<a href="' + b.website + '" target="_blank" class="text-xs text-blue-500 underline">Visit Website</a>'
+
+      html += '<div class="flex gap-6 mt-4 mb-4 pb-4 border-b">'
+      html += '  <div><p class="text-xs text-gray-400">Score</p><p class="text-2xl font-bold ' + scoreColor(b.opportunity_score) + '">' + (b.opportunity_score || '?') + '</p></div>'
+      html += '  <div><p class="text-xs text-gray-400">Fit</p><p class="font-semibold mt-0.5">' + (b.fit_level || '—') + '</p></div>'
+      html += '  <div><p class="text-xs text-gray-400">Priority</p><p class="font-semibold mt-0.5">' + (b.priority || '—') + '</p></div>'
+      html += '  <div><p class="text-xs text-gray-400">Status</p><p class="font-semibold mt-0.5" id="status-display">' + (b.status || '—') + '</p></div>'
+      html += '</div>'
+
+      if (b.summary) html += '<p class="text-sm mb-1">' + b.summary + '</p>'
+      if (b.score_reason) html += '<p class="text-xs text-gray-400 mb-4">' + b.score_reason + '</p>'
+
+      html += '<div class="flex flex-col gap-1.5 text-sm mb-4 pb-4 border-b">'
+      if (b.category) html += '<div class="flex gap-3"><span class="text-gray-400 w-16 shrink-0 text-xs pt-0.5">Category</span><span class="text-sm">' + b.category + '</span></div>'
+      if (b.location) html += '<div class="flex gap-3"><span class="text-gray-400 w-16 shrink-0 text-xs pt-0.5">Location</span><span class="text-sm">' + b.location + '</span></div>'
+      if (contact.phones && contact.phones.length > 0) html += '<div class="flex gap-3"><span class="text-gray-400 w-16 shrink-0 text-xs pt-0.5">Phone</span><span class="text-sm">' + contact.phones[0] + '</span></div>'
+      if (contact.emails && contact.emails.length > 0) html += '<div class="flex gap-3"><span class="text-gray-400 w-16 shrink-0 text-xs pt-0.5">Email</span><span class="text-sm">' + contact.emails[0] + '</span></div>'
+      if (contact.whatsapp_available) html += '<div class="flex gap-3"><span class="text-gray-400 w-16 shrink-0 text-xs pt-0.5">WhatsApp</span><span class="text-sm">Available</span></div>'
+      html += '</div>'
+
+      if (problems.length > 0) {
+        html += '<p class="text-sm font-semibold mb-2">Problems <span class="font-normal text-gray-400">(' + problems.length + ')</span></p>'
+        html += '<div class="flex flex-col divide-y mb-4">'
+        for (var i = 0; i < problems.length; i++) {
+          var p = problems[i]
+          html += '<div class="py-3">'
+          html += '  <div class="flex justify-between">'
+          html += '    <p class="text-sm font-semibold">' + p.problem + '</p>'
+          html += '    <span class="text-xs font-semibold ml-3 shrink-0 ' + severityColor(p.severity) + '">' + (p.severity || '—') + '</span>'
+          html += '  </div>'
+          if (p.evidence) html += '  <p class="text-xs text-gray-400 mt-1">' + p.evidence + '</p>'
+          html += '</div>'
+        }
+        html += '</div>'
+      }
+
+      if (b.recommended_service) {
+        html += '<div class="pb-4 border-b mb-4">'
+        html += '  <p class="text-xs text-gray-400 mb-1">RECOMMENDED SERVICE</p>'
+        html += '  <p class="font-semibold text-sm mb-1">' + b.recommended_service + '</p>'
+        if (b.service_reason) html += '  <p class="text-xs text-gray-400 mb-2">' + b.service_reason + '</p>'
+        if (values.length > 0) {
+          html += '  <ul class="text-xs text-gray-600 list-disc ml-4 flex flex-col gap-0.5">'
+          for (var j = 0; j < values.length; j++) html += '<li>' + values[j] + '</li>'
+          html += '  </ul>'
+        }
+        html += '</div>'
+      }
+
+      if (b.next_action) {
+        html += '<div class="pb-4 border-b mb-4">'
+        html += '  <p class="text-xs text-gray-400 mb-1">NEXT ACTION</p>'
+        html += '  <p class="text-sm font-semibold">' + b.next_action + '</p>'
+        html += '</div>'
+      }
+
+      html += '<div class="pb-4 border-b mb-4">'
+      html += '  <p class="text-xs text-gray-400 mb-2">UPDATE STATUS</p>'
+      html += '  <div class="flex gap-2">'
+      html += '    <select id="status-select" class="border p-2 flex-1 text-sm bg-white">'
+      var statuses = ["New", "Reviewed", "Qualified", "Contacted", "Interested", "Not Fit", "Closed"]
+      for (var k = 0; k < statuses.length; k++) {
+        var sel = b.status === statuses[k] ? ' selected' : ''
+        html += '<option' + sel + '>' + statuses[k] + '</option>'
+      }
+      html += '    </select>'
+      html += '    <button onclick="updateStatus()" class="bg-black text-white px-5 py-2">Save</button>'
+      html += '  </div>'
+      html += '  <p id="status-msg" class="mt-1.5 text-xs text-gray-400"></p>'
+      html += '</div>'
+
+      html += '<div class="mb-4">'
+      html += '  <p class="text-xs text-gray-400 mb-2">NOTES</p>'
+      html += '  <div class="flex gap-2 mb-3">'
+      html += '    <input id="note-input" type="text" placeholder="Write a note..." class="border p-2 flex-1 text-sm outline-none">'
+      html += '    <button onclick="addNote()" class="bg-black text-white px-5 py-2">Add</button>'
+      html += '  </div>'
+      if (notes.length > 0) {
+        html += '  <div class="flex flex-col divide-y">'
+        for (var n = 0; n < notes.length; n++) {
+          html += '  <p class="text-sm py-2 text-gray-600">' + notes[n].text + '</p>'
+        }
+        html += '  </div>'
+      }
+      html += '</div>'
+
+      document.getElementById('business-info').innerHTML = html
+    }
+
+    async function updateStatus() {
+      var status = document.getElementById('status-select').value
+      await fetch('/businesses/' + businessId + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      })
+      document.getElementById('status-msg').innerText = 'Saved — ' + status
+      document.getElementById('status-display').innerText = status
+    }
+
+    async function addNote() {
+      var note = document.getElementById('note-input').value.trim()
+      if (!note) return
+      await fetch('/businesses/' + businessId + '/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: note })
+      })
+      document.getElementById('note-input').value = ''
+      loadBusiness()
+    }
+
+    loadBusiness()
+  </script>
+
+</body>
+</html>

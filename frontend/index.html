@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BizScout AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 max-w-md mx-auto">
+
+  <h1 class="text-2xl font-bold mb-1">BizScout AI</h1>
+  <p class="text-sm text-gray-400 mb-8">Find local businesses that need your services.</p>
+
+  <div class="flex flex-col gap-5">
+
+    <div>
+      <p class="text-sm font-semibold mb-2">Business Niche</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="selectNiche(this, 'Restaurants')"  class="niche-btn text-sm px-3 py-1 border">Restaurants</button>
+        <button type="button" onclick="selectNiche(this, 'Clinics')"      class="niche-btn text-sm px-3 py-1 border">Clinics</button>
+        <button type="button" onclick="selectNiche(this, 'Gyms')"         class="niche-btn text-sm px-3 py-1 border">Gyms</button>
+        <button type="button" onclick="selectNiche(this, 'Schools')"      class="niche-btn text-sm px-3 py-1 border">Schools</button>
+        <button type="button" onclick="selectNiche(this, 'Salons')"       class="niche-btn text-sm px-3 py-1 border">Salons</button>
+        <button type="button" onclick="selectNiche(this, 'Hotels')"       class="niche-btn text-sm px-3 py-1 border">Hotels</button>
+        <button type="button" onclick="selectNiche(this, 'Pharmacies')"   class="niche-btn text-sm px-3 py-1 border">Pharmacies</button>
+        <button type="button" onclick="selectNiche(this, 'Real Estate')"  class="niche-btn text-sm px-3 py-1 border">Real Estate</button>
+        <button type="button" onclick="toggleCustom()"                    class="niche-btn text-sm px-3 py-1 border text-gray-400">+ Other</button>
+      </div>
+      <input id="niche-custom" type="text" placeholder="Type custom niche..." class="w-full border-b py-2 text-sm mt-3 hidden outline-none" oninput="onCustomNiche(this)">
+    </div>
+
+    <div>
+      <p class="text-sm font-semibold mb-1">Location</p>
+      <input id="location" type="text" placeholder="Start typing a city..." class="w-full border-b py-2 text-sm outline-none">
+      <p id="location-hint" class="text-xs text-gray-400 mt-1">Loading location search...</p>
+    </div>
+
+    <div>
+      <p class="text-sm font-semibold mb-1">Service You Offer</p>
+      <input id="service" type="text" placeholder="e.g. POS system + online ordering website" class="w-full border-b py-2 text-sm outline-none">
+    </div>
+
+    <div>
+      <p class="text-sm font-semibold mb-1">Target Count <span class="font-normal text-gray-400">(5–20)</span></p>
+      <input id="target" type="number" value="10" min="5" max="20" class="w-full border-b py-2 text-sm outline-none">
+    </div>
+
+  </div>
+
+  <button onclick="createCampaign()" class="mt-8 w-full bg-black text-white py-2.5 font-semibold">
+    Start Campaign
+  </button>
+
+  <p id="msg" class="mt-3 text-xs text-gray-400 text-center"></p>
+
+  <p class="mt-6 text-center text-xs text-gray-400">
+    <a href="/frontend/history.html" class="underline">View past campaigns</a>
+  </p>
+
+  <script>
+    var selectedNicheBtn = null
+    var selectedNiche = ''
+
+    function selectNiche(btn, value) {
+      if (selectedNicheBtn) {
+        selectedNicheBtn.style.background = ''
+        selectedNicheBtn.style.color = ''
+      }
+      document.getElementById('niche-custom').classList.add('hidden')
+      btn.style.background = '#000'
+      btn.style.color = '#fff'
+      selectedNicheBtn = btn
+      selectedNiche = value
+    }
+
+    function toggleCustom() {
+      var customInput = document.getElementById('niche-custom')
+      customInput.classList.toggle('hidden')
+      if (!customInput.classList.contains('hidden')) {
+        customInput.focus()
+        if (selectedNicheBtn) {
+          selectedNicheBtn.style.background = ''
+          selectedNicheBtn.style.color = ''
+          selectedNicheBtn = null
+        }
+        selectedNiche = ''
+      }
+    }
+
+    function onCustomNiche(input) {
+      selectedNiche = input.value
+    }
+
+    async function loadMaps() {
+      try {
+        var res = await fetch('/config')
+        var config = await res.json()
+        var key = config.google_maps_key
+        if (!key || key === 'your_google_maps_api_key_here') {
+          document.getElementById('location-hint').innerText = 'Type your city manually.'
+          return
+        }
+        var script = document.createElement('script')
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places&callback=initAutocomplete'
+        script.async = true
+        document.head.appendChild(script)
+      } catch (e) {
+        document.getElementById('location-hint').innerText = 'Type your city manually.'
+      }
+    }
+
+    function initAutocomplete() {
+      var input = document.getElementById('location')
+      var autocomplete = new google.maps.places.Autocomplete(input, { types: ['(cities)'] })
+      autocomplete.addListener('place_changed', function() {
+        var place = autocomplete.getPlace()
+        if (place && place.formatted_address) input.value = place.formatted_address
+      })
+      document.getElementById('location-hint').innerText = 'Pick a city from the suggestions.'
+    }
+
+    async function createCampaign() {
+      var niche = selectedNiche.trim()
+      var location = document.getElementById('location').value.trim()
+      var service = document.getElementById('service').value.trim()
+      var target = parseInt(document.getElementById('target').value)
+
+      if (!niche || !location || !service) {
+        document.getElementById('msg').innerText = 'Please fill in all fields and select a niche.'
+        return
+      }
+
+      document.getElementById('msg').innerText = 'Creating campaign...'
+
+      var res = await fetch('/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_niche: niche, location: location, service_offered: service, target_count: target })
+      })
+
+      var data = await res.json()
+      if (data.campaign_id) {
+        await fetch('/campaigns/' + data.campaign_id + '/run', { method: 'POST' })
+        window.location.href = '/frontend/campaign.html?id=' + data.campaign_id
+      } else {
+        document.getElementById('msg').innerText = 'Something went wrong. Try again.'
+      }
+    }
+
+    loadMaps()
+  </script>
+
+</body>
+</html>
