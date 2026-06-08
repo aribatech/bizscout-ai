@@ -46,7 +46,7 @@
 
   </div>
 
-  <button onclick="createCampaign()" class="mt-8 w-full bg-black text-white py-2.5 font-semibold">
+  <button id="start-btn" onclick="createCampaign()" class="mt-8 w-full bg-black text-white py-2.5 font-semibold">
     Start Campaign
   </button>
 
@@ -134,6 +134,10 @@
         return
       }
 
+      var btn = document.getElementById('start-btn')
+      btn.disabled = true
+      btn.innerText = 'Starting...'
+      btn.className = 'mt-8 w-full bg-gray-400 text-white py-2.5 font-semibold cursor-not-allowed'
       document.getElementById('msg').innerText = 'Creating campaign...'
 
       var res = await fetch('/campaigns', {
