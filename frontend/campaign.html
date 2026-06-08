@@ -21,12 +21,7 @@
     <a id="export-link" href="#" class="ml-auto text-xs text-blue-500 underline">Download CSV</a>
   </div>
 
-  <p class="text-sm font-semibold mb-2">Live Progress</p>
-  <div id="log-box" class="text-xs font-mono text-gray-400 h-32 overflow-y-auto mb-8 border-b pb-4">
-    <p>Waiting for events...</p>
-  </div>
-
-  <p class="text-sm font-semibold mb-3">Businesses Found <span id="biz-count" class="font-normal text-gray-400"></span></p>
+<p class="text-sm font-semibold mb-3">Businesses Found <span id="biz-count" class="font-normal text-gray-400"></span></p>
   <div id="biz-list"></div>
 
   <script>
@@ -35,38 +30,13 @@
 
     document.getElementById('export-link').href = '/campaigns/' + campaignId + '/export'
 
-    var wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
-    var ws = new WebSocket(wsProtocol + window.location.host + '/campaigns/' + campaignId + '/stream')
     var logBox = document.getElementById('log-box')
-
-    ws.onmessage = function(e) {
-      var data = JSON.parse(e.data)
-      addLog(data.message)
-      if (data.type === 'BUSINESS_ANALYZED') loadBusinesses()
-      if (data.type === 'CAMPAIGN_COMPLETED' || data.type === 'CAMPAIGN_FAILED') {
-        loadCampaign()
-        loadBusinesses()
-        ws.close()
-      }
-    }
-
-    ws.onerror = function() {
-      addLog('WebSocket error — switching to polling.')
-      pollStatus()
-    }
-
-    function addLog(message) {
-      var first = logBox.querySelector('p')
-      if (first && first.innerText === 'Waiting for events...') first.remove()
-      var p = document.createElement('p')
-      p.innerText = '▸ ' + message
-      logBox.appendChild(p)
-      logBox.scrollTop = logBox.scrollHeight
-    }
-
-    function pollStatus() {
-      setInterval(function() { loadCampaign(); loadBusinesses() }, 5000)
-    }
+    var pollInterval = setInterval(function() {
+      loadCampaign().then(function(status) {
+        if (status === 'COMPLETED' || status === 'FAILED') clearInterval(pollInterval)
+      })
+      loadBusinesses()
+    }, 5000)
 
     function scoreColor(score) {
       if (score >= 70) return 'text-green-600'
@@ -90,6 +60,7 @@
       var badge = document.getElementById('status-badge')
       badge.innerText = c.status
       badge.className = 'text-xs font-semibold px-2 py-0.5 rounded-full ' + statusBadge(c.status)
+      return c.status
     }
 
     async function loadBusinesses() {
