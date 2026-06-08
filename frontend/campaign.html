@@ -35,7 +35,8 @@
 
     document.getElementById('export-link').href = '/campaigns/' + campaignId + '/export'
 
-    var ws = new WebSocket('ws://' + window.location.host + '/campaigns/' + campaignId + '/stream')
+    var wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+    var ws = new WebSocket(wsProtocol + window.location.host + '/campaigns/' + campaignId + '/stream')
     var logBox = document.getElementById('log-box')
 
     ws.onmessage = function(e) {
