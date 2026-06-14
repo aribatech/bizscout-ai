@@ -39,6 +39,7 @@ app.include_router(businesses_router)
 app.include_router(exports_router)
 
 app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/pics", StaticFiles(directory="pics"), name="pics")
 
 
 @app.get("/config")

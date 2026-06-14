@@ -9,7 +9,7 @@
 <body class="p-8 max-w-2xl mx-auto">
 
   <div id="back-link" class="text-sm mb-6">
-    <a href="/frontend/index.html" class="text-blue-500 underline">← Back</a>
+    <a href="/frontend/app.html" class="text-blue-500 underline">← Back</a>
   </div>
 
   <div id="business-info">
@@ -18,7 +18,7 @@
 
   <script>
     var businessId = new URLSearchParams(window.location.search).get('id')
-    if (!businessId) window.location.href = '/frontend/index.html'
+    if (!businessId) window.location.href = '/frontend/app.html'
 
     function scoreColor(score) {
       if (score >= 70) return 'text-green-600'

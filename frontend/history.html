@@ -9,7 +9,7 @@
 <body class="p-8 max-w-2xl mx-auto">
 
   <div class="text-sm mb-6">
-    <a href="/frontend/index.html" class="text-blue-500 underline">← New Campaign</a>
+    <a href="/frontend/app.html" class="text-blue-500 underline">← New Campaign</a>
   </div>
 
   <h1 class="text-2xl font-bold mb-6">Past Campaigns</h1>
@@ -31,7 +31,7 @@
       var campaigns = await res.json()
 
       if (!campaigns || campaigns.length === 0) {
-        document.getElementById('list').innerHTML = '<p class="text-sm text-gray-400">No campaigns yet. <a href="/frontend/index.html" class="text-blue-500 underline">Start one →</a></p>'
+        document.getElementById('list').innerHTML = '<p class="text-sm text-gray-400">No campaigns yet. <a href="/frontend/app.html" class="text-blue-500 underline">Start one →</a></p>'
         return
       }
 

@@ -9,7 +9,7 @@
 <body class="p-8 max-w-2xl mx-auto">
 
   <div class="flex gap-5 text-sm mb-6">
-    <a href="/frontend/index.html" class="text-blue-500 underline">← New Campaign</a>
+    <a href="/frontend/app.html" class="text-blue-500 underline">← New Campaign</a>
     <a href="/frontend/history.html" class="text-blue-500 underline">History</a>
   </div>
 
@@ -27,7 +27,7 @@
 
   <script>
     var campaignId = new URLSearchParams(window.location.search).get('id')
-    if (!campaignId) window.location.href = '/frontend/index.html'
+    if (!campaignId) window.location.href = '/frontend/app.html'
 
     document.getElementById('export-link').href = '/campaigns/' + campaignId + '/export'
 
